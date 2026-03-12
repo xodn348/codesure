@@ -1,6 +1,6 @@
 {
   "name": "codesure",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Privacy-first MCP security scanner for AI-generated code",
   "type": "module",
   "bin": {
