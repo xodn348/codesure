@@ -1,0 +1,24 @@
+# Source files (only dist/ and src/rules/ are packed via package.json "files")
+src/
+tests/
+
+# Explicitly exclude test file in src/rules (included via package.json "files": ["src/rules"])
+src/rules/loader.test.ts
+
+# Test artifacts in dist (use both patterns for npm minimatch compatibility)
+**/*.test.js
+**/*.test.d.ts
+**/*.test.js.map
+**/*.test.d.ts.map
+
+# Source maps
+**/*.map
+
+# Config / dev files
+tsconfig.json
+bunfig.toml
+*.tgz
+
+# Sisyphus / CI
+.sisyphus/
+.github/
