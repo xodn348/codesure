@@ -1,0 +1,8 @@
+rules:
+  - id: js.malicious.reverse-shell
+    category: malicious
+    taxonomy: NET
+    severity: critical
+    languages: [javascript, typescript]
+    pattern: '(?:client|socket)\.pipe\s*\(\s*(?:sh|shell)\.stdin'
+    message: "socket stream piped to shell stdin - possible reverse shell"

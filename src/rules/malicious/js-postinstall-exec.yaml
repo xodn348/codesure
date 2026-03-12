@@ -1,0 +1,8 @@
+rules:
+  - id: js.malicious.postinstall-exec
+    category: malicious
+    taxonomy: EXS
+    severity: high
+    languages: [json]
+    pattern: '"postinstall"\s*:\s*"(?:curl|wget|bash|sh|node|python|exec|eval)'
+    message: "postinstall script executes shell commands - possible supply-chain attack"

@@ -1,0 +1,8 @@
+rules:
+  - id: js.malicious.cookie-env-staging
+    category: malicious
+    taxonomy: EXF
+    severity: high
+    languages: [javascript, typescript]
+    pattern: 'document\.cookie\s*\+\s*process\.env'
+    message: "cookie and environment secret values combined - possible data staging for exfiltration"

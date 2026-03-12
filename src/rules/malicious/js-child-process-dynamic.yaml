@@ -1,0 +1,8 @@
+rules:
+  - id: js.malicious.child-process-dynamic
+    category: malicious
+    taxonomy: EXM
+    severity: high
+    languages: [javascript, typescript]
+    pattern: '(?:exec|spawn|execSync)\s*\(\s*(?:process\.env|[a-zA-Z_]\w*\s*\+)'
+    message: "child_process execution with dynamic input - suspicious runtime execution"

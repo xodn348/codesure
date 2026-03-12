@@ -1,0 +1,8 @@
+rules:
+  - id: js.malicious.preinstall-exec
+    category: malicious
+    taxonomy: EXS
+    severity: high
+    languages: [json]
+    pattern: '"preinstall"\s*:\s*"(?:curl|wget|bash|sh|node|python|exec|eval)'
+    message: "preinstall script executes shell commands - possible supply-chain attack"

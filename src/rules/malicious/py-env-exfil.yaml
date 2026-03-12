@@ -1,0 +1,8 @@
+rules:
+  - id: py.malicious.env-exfil
+    category: malicious
+    taxonomy: EXF
+    severity: critical
+    languages: [python]
+    pattern: '(?:requests\.(?:get|post)|urllib\.request\.urlopen)\s*\([^\n]*os\.environ'
+    message: "os.environ sent over HTTP - environment variable exfiltration"

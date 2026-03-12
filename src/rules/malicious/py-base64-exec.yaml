@@ -1,0 +1,8 @@
+rules:
+  - id: py.malicious.base64-exec
+    category: malicious
+    taxonomy: DEF
+    severity: critical
+    languages: [python]
+    pattern: 'exec\s*\(\s*(?:base64\.b64decode|__import__\s*\(\s*[\"\x27]base64)'
+    message: "exec() with base64 decode - obfuscated code execution"

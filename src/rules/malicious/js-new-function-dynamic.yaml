@@ -1,0 +1,8 @@
+rules:
+  - id: js.malicious.new-function-dynamic
+    category: malicious
+    taxonomy: EXM
+    severity: critical
+    languages: [javascript, typescript]
+    pattern: 'new\s+Function\s*\([^\)]*\+'
+    message: "new Function() with dynamic string - obfuscated code execution"

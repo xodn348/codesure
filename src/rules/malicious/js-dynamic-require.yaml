@@ -1,0 +1,8 @@
+rules:
+  - id: js.malicious.dynamic-require
+    category: malicious
+    taxonomy: EXM
+    severity: high
+    languages: [javascript, typescript]
+    pattern: 'require\s*\(\s*(?:process\.env|[a-zA-Z_]\w*\s*\+|`\$\{)'
+    message: "require() with dynamic argument - potential malicious module loading"

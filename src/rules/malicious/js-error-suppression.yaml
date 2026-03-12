@@ -1,0 +1,8 @@
+rules:
+  - id: js.malicious.error-suppression
+    category: malicious
+    taxonomy: DEF
+    severity: low
+    languages: [javascript, typescript]
+    pattern: 'catch\s*\([^)]*\)\s*\{\s*\}'
+    message: "empty catch block suppresses errors - may hide malicious activity"

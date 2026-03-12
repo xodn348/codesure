@@ -1,0 +1,9 @@
+rules:
+  - id: js.malicious.base64-obfuscation
+    category: malicious
+    taxonomy: DEF
+    severity: medium
+    languages: [javascript, typescript]
+    pattern: '(?:atob\s*\(|Buffer\.from\s*\([^)]+,\s*[\"\x27]base64[\"\x27]\))'
+    pattern-not: 'data:image/|data:application/'
+    message: "base64 decoding in code context - possible obfuscation"

@@ -1,0 +1,8 @@
+rules:
+  - id: js.malicious.string-obfuscation
+    category: malicious
+    taxonomy: DEF
+    severity: high
+    languages: [javascript, typescript]
+    pattern: 'String\.fromCharCode\s*\(\s*\d+(?:\s*,\s*\d+){4,}'
+    message: "String.fromCharCode with many char codes - likely obfuscated payload"

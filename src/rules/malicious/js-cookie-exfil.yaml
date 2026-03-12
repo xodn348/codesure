@@ -1,0 +1,8 @@
+rules:
+  - id: js.malicious.cookie-exfil
+    category: malicious
+    taxonomy: EXF
+    severity: critical
+    languages: [javascript, typescript]
+    pattern: '(?:fetch|XMLHttpRequest|\.get)\s*\([^\n]*document\.cookie'
+    message: "document.cookie sent to network call - credential exfiltration"

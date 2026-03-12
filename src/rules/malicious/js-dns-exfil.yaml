@@ -1,0 +1,8 @@
+rules:
+  - id: js.malicious.dns-exfil
+    category: malicious
+    taxonomy: EXF
+    severity: high
+    languages: [javascript, typescript]
+    pattern: 'dns\.(?:resolve[46]?|lookup)\s*\(\s*`\$\{'
+    message: "DNS resolution with template literal - possible DNS exfiltration"

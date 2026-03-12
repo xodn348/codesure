@@ -1,0 +1,8 @@
+rules:
+  - id: js.malicious.crypto-miner
+    category: malicious
+    taxonomy: NET
+    severity: critical
+    languages: [javascript, typescript]
+    pattern: '(?:minexmr|supportxmr|c3pool|xmrpool|pool\.hashvault|MoneroOcean|stratum\+tcp)'
+    message: "known cryptocurrency mining pool indicator detected"

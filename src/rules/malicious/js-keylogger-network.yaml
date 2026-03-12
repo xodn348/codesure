@@ -1,0 +1,8 @@
+rules:
+  - id: js.malicious.keylogger-network
+    category: malicious
+    taxonomy: NET
+    severity: high
+    languages: [javascript, typescript]
+    pattern: 'addEventListener\s*\(\s*[\"\x27]keydown[\"\x27][^\n]*'
+    message: "keydown event capture detected - potential keylogging behavior"

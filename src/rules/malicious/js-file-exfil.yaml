@@ -1,0 +1,8 @@
+rules:
+  - id: js.malicious.file-exfil
+    category: malicious
+    taxonomy: EXF
+    severity: critical
+    languages: [javascript, typescript]
+    pattern: 'readFile(?:Sync)?\s*\(\s*[\"\x27]/(?:etc/passwd|home/|Users/|root/|\.ssh/)'
+    message: "sensitive file read pattern detected - potential file exfiltration preparation"

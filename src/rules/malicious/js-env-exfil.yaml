@@ -1,0 +1,8 @@
+rules:
+  - id: js.malicious.env-exfil
+    category: malicious
+    taxonomy: EXF
+    severity: critical
+    languages: [javascript, typescript]
+    pattern: '(?:fetch|https?\.get|require\([\"\x27]https?[\"\x27]\)\.get)\s*\([^\n]*process\.env'
+    message: "process.env sent over network - environment variable exfiltration"

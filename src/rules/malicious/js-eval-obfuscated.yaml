@@ -1,0 +1,8 @@
+rules:
+  - id: js.malicious.eval-obfuscated
+    category: malicious
+    taxonomy: EXM
+    severity: critical
+    languages: [javascript, typescript]
+    pattern: 'eval\s*\(\s*(?:atob|Buffer\.from|String\.fromCharCode)'
+    message: "eval() with base64/charcode decode - obfuscated code execution"
