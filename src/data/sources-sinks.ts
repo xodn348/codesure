@@ -1,0 +1,40 @@
+export const SOURCES = new Set([
+  'req.body',
+  'req.query',
+  'req.params',
+  'req.headers',
+  'process.argv',
+  'process.env',
+  'request.args',
+  'request.form',
+  'request.values',
+  'document.cookie',
+  'window.location',
+  'location.hash',
+  'localStorage.getItem',
+  'sessionStorage.getItem',
+  'input()',
+]);
+
+export const SINKS = new Set([
+  'eval',
+  'new Function',
+  'exec',
+  'execSync',
+  'spawn',
+  'spawnSync',
+  'child_process.exec',
+  'db.query',
+  'execute',
+  'innerHTML',
+  'outerHTML',
+  'document.write',
+  'pickle.loads',
+  'pickle.load',
+  'subprocess.call',
+  'os.system',
+  'fetch',
+  'XMLHttpRequest',
+]);
+
+export const SANITIZERS: Set<string> = new Set();
