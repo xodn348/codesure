@@ -17,6 +17,12 @@ if (process.argv.includes('--version')) {
   process.exit(0);
 }
 
+if (process.argv[2] === 'install') {
+  const { install } = await import('./install.js');
+  await install();
+  process.exit(0);
+}
+
 const agentInfo: AgentInfo = {
   name: process.env.CODESURE_CLIENT_NAME ?? 'Claude Code',
   version: process.env.CODESURE_CLIENT_VERSION ?? '1.0.0',

@@ -1,9 +1,11 @@
 {
   "name": "codesure",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Privacy-first MCP security scanner for AI-generated code",
   "type": "module",
-  "bin": { "codesure": "dist/index.js" },
+  "bin": {
+    "codesure": "dist/index.js"
+  },
   "main": "dist/index.js",
   "files": [
     "dist/**/*.js",
@@ -19,7 +21,9 @@
     "test": "bun test",
     "typecheck": "tsc --noEmit"
   },
-  "engines": { "node": ">=18" },
+  "engines": {
+    "node": ">=18"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
     "zod": "^3.22.0",
