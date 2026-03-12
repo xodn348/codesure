@@ -6,70 +6,73 @@
 
 Privacy-first MCP security scanner. Detects vulnerabilities and malicious code in AI-generated code. 100% local — your code never leaves your machine.
 
-## Quick Start
+## Install
+
+Run once. CodeSure auto-detects your AI coding tools and registers itself:
 
 ```bash
-npx codesure
+npx codesure install
 ```
 
-## Configuration
+```
+🔍 CodeSure — Auto-install MCP
 
-### Claude Code
-Add to your `claude_desktop_config.json`:
+  ✅ Claude Code: codesure added
+  ✅ Codex: codesure added
+  ⏭  Opencode: already configured
+  ✅ Claude Desktop: codesure added
+  ✅ Cursor: codesure added
 
-```json
-{
-  "mcpServers": {
-    "codesure": {
-      "command": "npx",
-      "args": ["codesure"],
-      "env": {
-        "GITHUB_TOKEN": "your_github_token_here"
-      }
-    }
-  }
-}
+✨ Done! Restart your MCP client to activate CodeSure.
 ```
 
-### Cursor
-Add to `.cursor/mcp.json`:
+Restart your client. `scan_code`, `scan_package`, and other tools will appear automatically.
 
-```json
-{
-  "mcpServers": {
-    "codesure": {
-      "command": "npx",
-      "args": ["codesure"]
-    }
-  }
-}
-```
+**Supported clients**: Claude Code · Codex · Opencode · Claude Desktop · Cursor · VS Code (Copilot)
+
+## How It Works
+
+`npx codesure install` scans for known MCP client config files on your machine. For each client found, it patches the config to register codesure as an MCP server. Clients not installed are silently skipped. Already-configured clients are never overwritten.
+
+| Client | Config patched |
+|--------|---------------|
+| Claude Code | `~/.claude.json` → `mcpServers` |
+| Codex | `codex mcp add codesure` (CLI) |
+| Opencode | `~/.config/opencode/config.json` → `mcp` |
+| Claude Desktop | `~/Library/.../Claude/claude_desktop_config.json` |
+| Cursor | `~/.cursor/mcp.json` |
+| VS Code | `settings.json` → `github.copilot.mcp.servers` |
 
 ## MCP Tools
 
-| Tool | Description |
+Once installed, your AI assistant gains these tools:
+
+| Tool | What it does |
 |------|-------------|
-| `scan_code` | Scan source code for security vulnerabilities and malicious patterns. Runs 100% locally. |
-| `scan_package` | Check an npm package name against registry for existence, typosquatting, and supply-chain risks. |
-| `scan_manifest` | Check a browser extension or app manifest for dangerous permissions and CSP issues. |
-| `report_pattern` | Anonymize and report a detected malicious pattern to the community rules repo. |
-| `update_rules` | Download and merge the latest community detection rules. |
+| `scan_code` | Scans source code for vulnerabilities and malicious patterns. 5-stage pipeline: Regex → AST taint → Entropy → Behavioral chain → Context filter. |
+| `scan_package` | Checks npm packages for typosquatting and supply-chain risks before you install them. |
+| `scan_manifest` | Audits browser extension and app manifests for dangerous permissions. |
+| `report_pattern` | Anonymizes and reports a malicious pattern to the community rules repo (requires confirmation). |
+| `update_rules` | Downloads the latest community detection rules. |
 
-## Detection Categories
+## What It Detects
 
-- **Vulnerability**: SQL injection, XSS, eval injection, hardcoded secrets, CSRF, path traversal, prototype pollution, insecure random.
-- **Malicious**: Data exfiltration (DNS/Post), obfuscation detection, reverse shells, crypto miners, keyloggers, suspicious domain connections, malicious install scripts.
+**Vulnerabilities** — SQL injection, XSS, eval injection, hardcoded secrets, CSRF, path traversal, prototype pollution, insecure random
 
-## Privacy Statement
+**Malicious code** — Data exfiltration (DNS/HTTP), obfuscation, reverse shells, crypto miners, keyloggers, malicious install scripts, suspicious domains
 
-**100% Local Execution.** CodeSure is designed with a "local-first" philosophy. Your source code never leaves your machine during a scan.
-- **Zero Telemetry**: We do not collect usage statistics or scan results.
-- **Explicit Reporting**: The `report_pattern` tool only sends anonymized metadata and only when explicitly confirmed by the user.
+## Privacy
+
+**Your code never leaves your machine.**
+
+- All scanning runs locally — no network calls during analysis
+- Zero telemetry — no usage stats, no scan results collected
+- `report_pattern` only sends anonymized pattern metadata, and only when you explicitly confirm
 
 ## V1 Limitations
 
-- **Obfuscation**: Tier 3-6 advanced obfuscation (e.g. control flow flattening, virtualization) may not be fully detected.
-- **Taint Analysis**: Currently limited to 3-hop AST taint; deep interprocedural taint across multiple files is not tracked.
+- Taint analysis is limited to 3-hop AST (single file); cross-file taint is not tracked
+- Tier 3-6 obfuscation (control flow flattening, virtualization) may not be detected
 
 ## License
 
