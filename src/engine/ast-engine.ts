@@ -118,122 +118,50 @@ function trackAssignments(line: string, taintMap: Map<string, TaintBinding>): vo
   }
 }
 
+function emitTaintFindings(
+  expression: string, sinkName: string, line: string, lineNumber: number,
+  taintMap: Map<string, TaintBinding>, filePath: string | undefined,
+  findings: Finding[], seen: Set<string>,
+): void {
+  const directSource = findMatchingSource(expression);
+  if (directSource !== undefined) {
+    const key = `${lineNumber}:${sinkName}:${directSource}:0`;
+    if (!seen.has(key)) {
+      findings.push(createFinding({ line, lineNumber, filePath, sourceName: directSource, sinkName, hopCount: 0, evidenceChain: [], columnHint: sinkName }));
+      seen.add(key);
+    }
+    return;
+  }
+
+  for (const identifier of getTaintedIdentifiers(expression, taintMap)) {
+    const taint = taintMap.get(identifier);
+    if (taint === undefined) continue;
+
+    const key = `${lineNumber}:${sinkName}:${taint.sourceName}:${taint.hops}:${taint.chain.join('>')}`;
+    if (seen.has(key)) continue;
+
+    findings.push(createFinding({ line, lineNumber, filePath, sourceName: taint.sourceName, sinkName, hopCount: taint.hops, evidenceChain: taint.chain, columnHint: sinkName }));
+    seen.add(key);
+  }
+}
+
 function checkFunctionSink(line: string, sinkName: string, lineNumber: number, taintMap: Map<string, TaintBinding>, filePath: string | undefined, findings: Finding[], seen: Set<string>): void {
   const sinkPattern = sinkName === 'new Function'
     ? /new\s+Function\s*\((.*)\)/
     : new RegExp(`${escapeRegex(sinkName)}\\s*\\((.*)\\)`);
 
   const match = line.match(sinkPattern);
-  if (match === null) {
-    return;
-  }
+  if (match === null) return;
 
-  const args = match[1] ?? '';
-  const directSource = findMatchingSource(args);
-  if (directSource !== undefined) {
-    const key = `${lineNumber}:${sinkName}:${directSource}:0`;
-    if (!seen.has(key)) {
-      findings.push(
-        createFinding({
-          line,
-          lineNumber,
-          filePath,
-          sourceName: directSource,
-          sinkName,
-          hopCount: 0,
-          evidenceChain: [],
-          columnHint: sinkName,
-        }),
-      );
-      seen.add(key);
-    }
-    return;
-  }
-
-  const taintedIdentifiers = getTaintedIdentifiers(args, taintMap);
-  for (const identifier of taintedIdentifiers) {
-    const taint = taintMap.get(identifier);
-    if (taint === undefined) {
-      continue;
-    }
-
-    const key = `${lineNumber}:${sinkName}:${taint.sourceName}:${taint.hops}:${taint.chain.join('>')}`;
-    if (seen.has(key)) {
-      continue;
-    }
-
-    findings.push(
-      createFinding({
-        line,
-        lineNumber,
-        filePath,
-        sourceName: taint.sourceName,
-        sinkName,
-        hopCount: taint.hops,
-        evidenceChain: taint.chain,
-        columnHint: sinkName,
-      }),
-    );
-    seen.add(key);
-  }
+  emitTaintFindings(match[1] ?? '', sinkName, line, lineNumber, taintMap, filePath, findings, seen);
 }
 
 function checkPropertySink(line: string, lineNumber: number, taintMap: Map<string, TaintBinding>, filePath: string | undefined, findings: Finding[], seen: Set<string>): void {
   const propertyMatch = line.match(/\.(innerHTML|outerHTML)\s*=\s*(.+?)\s*;?\s*$/);
-  if (propertyMatch === null) {
-    return;
-  }
+  if (propertyMatch === null) return;
 
   const sinkName = propertyMatch[1] as string;
-  const expression = propertyMatch[2] ?? '';
-  const directSource = findMatchingSource(expression);
-
-  if (directSource !== undefined) {
-    const key = `${lineNumber}:${sinkName}:${directSource}:0`;
-    if (!seen.has(key)) {
-      findings.push(
-        createFinding({
-          line,
-          lineNumber,
-          filePath,
-          sourceName: directSource,
-          sinkName,
-          hopCount: 0,
-          evidenceChain: [],
-          columnHint: sinkName,
-        }),
-      );
-      seen.add(key);
-    }
-    return;
-  }
-
-  const taintedIdentifiers = getTaintedIdentifiers(expression, taintMap);
-  for (const identifier of taintedIdentifiers) {
-    const taint = taintMap.get(identifier);
-    if (taint === undefined) {
-      continue;
-    }
-
-    const key = `${lineNumber}:${sinkName}:${taint.sourceName}:${taint.hops}:${taint.chain.join('>')}`;
-    if (seen.has(key)) {
-      continue;
-    }
-
-    findings.push(
-      createFinding({
-        line,
-        lineNumber,
-        filePath,
-        sourceName: taint.sourceName,
-        sinkName,
-        hopCount: taint.hops,
-        evidenceChain: taint.chain,
-        columnHint: sinkName,
-      }),
-    );
-    seen.add(key);
-  }
+  emitTaintFindings(propertyMatch[2] ?? '', sinkName, line, lineNumber, taintMap, filePath, findings, seen);
 }
 
 /**

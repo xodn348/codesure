@@ -159,7 +159,9 @@ function setupAutoScanRules(): { created: number; skipped: number; failed: numbe
       ensureParentDirectory(target.path);
       writeFileSync(target.path, `${target.content}\n`, 'utf8');
       created += 1;
-    } catch {
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      console.warn(`[codesure install] Failed to write ${target.name} at ${target.path}: ${msg}`);
       failed += 1;
     }
   }
@@ -181,7 +183,9 @@ function handleJsonClient(client: JsonClient): 'installed' | 'skipped' | 'missin
     const updated = client.addEntry(freshConfig);
     writeFileSync(client.configPath, JSON.stringify(updated, null, 2) + '\n', 'utf8');
     return 'installed';
-  } catch {
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.warn(`[codesure install] ${client.name} config update failed: ${msg}`);
     return 'error';
   }
 }
@@ -198,11 +202,23 @@ function handleCliClient(client: CliClient): 'installed' | 'skipped' | 'missing'
     if (list.includes('codesure')) return 'skipped';
     execSync(client.installCmd, { stdio: 'ignore' });
     return 'installed';
-  } catch {
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.warn(`[codesure install] ${client.name} CLI install failed: ${msg}`);
     return 'error';
   }
 }
 
+/**
+ * Auto-detects installed AI coding clients and registers codesure as an MCP server.
+ *
+ * Patches config files for Claude Code, Codex, Opencode, Claude Desktop, Cursor,
+ * and VS Code. Already-configured clients are skipped. Also writes auto-scan rules
+ * to each client's rule file so AI agents call `scan_code` after code changes.
+ *
+ * @returns Resolves when all clients have been processed.
+ * @throws Never throws — individual client failures are logged and skipped.
+ */
 export async function install(): Promise<void> {
   console.log('\n🔍 CodeSure — Auto-install MCP\n');
 

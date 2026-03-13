@@ -11,17 +11,19 @@ export type ErrorCode =
 export class CodeSureError extends Error {
   readonly code: ErrorCode;
   readonly retryable: boolean;
+  readonly userMessage?: string;
   readonly context: Record<string, unknown>;
 
   constructor(
     code: ErrorCode,
     message: string,
-    options: { retryable?: boolean; context?: Record<string, unknown>; cause?: unknown } = {},
+    options: { retryable?: boolean; userMessage?: string; context?: Record<string, unknown>; cause?: unknown } = {},
   ) {
     super(message, { cause: options.cause });
     this.name = 'CodeSureError';
     this.code = code;
     this.retryable = options.retryable ?? false;
+    this.userMessage = options.userMessage;
     this.context = options.context ?? {};
   }
 }

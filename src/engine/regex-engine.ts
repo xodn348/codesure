@@ -62,6 +62,43 @@ function compileRules(rules: SecurityRule[]): CompiledRule[] {
  * const findings = scanWithRegex(code, filterRulesByLanguage(rules, 'javascript'));
  * ```
  */
+function matchRule(compiled: CompiledRule, line: string, lineNumber: number): RegExpExecArray | null {
+  try {
+    compiled.pattern.lastIndex = 0;
+    const match = compiled.pattern.exec(line);
+    if (match === null) return null;
+
+    if (compiled.patternNot !== undefined) {
+      compiled.patternNot.lastIndex = 0;
+      if (compiled.patternNot.test(line)) return null;
+    }
+
+    return match;
+  } catch (cause) {
+    const err = new CodeSureError('REGEX_EXEC_FAILED', `Regex failed for rule ${compiled.rule.id}`, {
+      context: { ruleId: compiled.rule.id, lineNumber },
+      cause,
+    });
+    console.warn(err.message, cause);
+    return null;
+  }
+}
+
+function buildFinding(compiled: CompiledRule, match: RegExpExecArray, line: string, lineNumber: number, filePath?: string): Finding {
+  return {
+    id: `${compiled.rule.id}-L${lineNumber}`,
+    severity: compiled.rule.severity,
+    category: compiled.rule.category,
+    confidence: compiled.confidence,
+    rule_id: compiled.rule.id,
+    taxonomy: compiled.rule.taxonomy,
+    message: compiled.rule.message,
+    location: { file: filePath, line: lineNumber, column: match.index },
+    snippet: safeTruncate(line.trim(), 200),
+    fix_suggestion: compiled.rule.fix,
+  };
+}
+
 export function scanWithRegex(code: string, rules: SecurityRule[], filePath?: string): Finding[] {
   if (code.length === 0 || rules.length === 0) {
     return [];
@@ -77,55 +114,13 @@ export function scanWithRegex(code: string, rules: SecurityRule[], filePath?: st
     const lineNumber = index + 1;
 
     for (const compiled of compiledRules) {
-      let match: RegExpExecArray | null = null;
-
-      try {
-        compiled.pattern.lastIndex = 0;
-        match = compiled.pattern.exec(line);
-      } catch (cause) {
-        const err = new CodeSureError('REGEX_EXEC_FAILED', `Regex execution failed for rule ${compiled.rule.id}`, { context: { ruleId: compiled.rule.id, lineNumber }, cause });
-        console.warn(err.message, cause);
-        continue;
-      }
-
-      if (match === null) {
-        continue;
-      }
-
-      if (compiled.patternNot !== undefined) {
-        try {
-          compiled.patternNot.lastIndex = 0;
-          if (compiled.patternNot.test(line)) {
-            continue;
-          }
-        } catch (cause) {
-          const err = new CodeSureError('REGEX_EXEC_FAILED', `Regex pattern_not execution failed for rule ${compiled.rule.id}`, { context: { ruleId: compiled.rule.id, lineNumber }, cause });
-          console.warn(err.message, cause);
-          continue;
-        }
-      }
+      const match = matchRule(compiled, line, lineNumber);
+      if (match === null) continue;
 
       const dedupeKey = `${compiled.rule.id}:${lineNumber}`;
-      if (seen.has(dedupeKey)) {
-        continue;
-      }
+      if (seen.has(dedupeKey)) continue;
 
-      findings.push({
-        id: `${compiled.rule.id}-L${lineNumber}`,
-        severity: compiled.rule.severity,
-        category: compiled.rule.category,
-        confidence: compiled.confidence,
-        rule_id: compiled.rule.id,
-        taxonomy: compiled.rule.taxonomy,
-        message: compiled.rule.message,
-        location: {
-          file: filePath,
-          line: lineNumber,
-          column: match.index,
-        },
-        snippet: safeTruncate(line.trim(), 200),
-        fix_suggestion: compiled.rule.fix,
-      });
+      findings.push(buildFinding(compiled, match, line, lineNumber, filePath));
       seen.add(dedupeKey);
     }
   }
