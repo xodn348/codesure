@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
+import { CodeSureError } from '../errors.js';
 
 const INDEX_URL =
   'https://raw.githubusercontent.com/xodn348/codesure-rules/main/rules-index.json';
@@ -26,7 +27,7 @@ async function fetchRulesIndex(source: string): Promise<RulesIndex | null> {
   const response = await fetch(source);
   if (response.status === 404) return null;
   if (!response.ok) {
-    throw new Error(`Failed to fetch rules index: HTTP ${response.status}`);
+    throw new CodeSureError('RULES_FETCH_FAILED', `Failed to fetch rules index: HTTP ${response.status}`, { retryable: true, context: { source, status: response.status } });
   }
   return (await response.json()) as RulesIndex;
 }
@@ -73,8 +74,8 @@ export async function updateRules(source?: string): Promise<UpdateResult> {
           ? `Successfully updated ${updated} community rule(s).`
           : `Updated ${updated} of ${index.rules.length} rule(s). Some downloads failed.`,
     };
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
+  } catch (cause) {
+    const message = cause instanceof CodeSureError ? cause.message : cause instanceof Error ? cause.message : String(cause);
     return { updated: 0, message: `Failed to fetch community rules: ${message}` };
   }
 }

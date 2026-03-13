@@ -17,6 +17,16 @@ export function parseSuppression(line: string, lineNumber: number): Suppression 
   return { ruleIds, line: lineNumber };
 }
 
+/**
+ * Applies inline `codesure-ignore` suppression comments to findings.
+ *
+ * Matches suppression comments on the same line or the line above a finding.
+ * Suppressed findings remain in output with `suppressed: true` for audit trail.
+ *
+ * @param findings - Findings to check against suppression comments.
+ * @param code - Original source code containing potential suppression comments.
+ * @returns Findings with `suppressed` and `suppression_rule` set where applicable.
+ */
 export function applySuppression(findings: Finding[], code: string): Finding[] {
   const lines = code.split('\n');
   const suppressions = new Map<number, Suppression>();

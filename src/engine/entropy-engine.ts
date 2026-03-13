@@ -19,6 +19,12 @@ const EXEMPT_PATTERNS = [
 
 const STRING_LITERAL_REGEX = /["'`][^"'`\n]{16,}["'`]/g;
 
+/**
+ * Computes Shannon entropy of a string in bits per byte.
+ *
+ * @param str - Input string. Returns 0 for empty string.
+ * @returns Entropy value in bits/byte. Typical thresholds: suspicious ≥ 4.0, high ≥ 4.5.
+ */
 export function calculateEntropy(str: string): number {
   if (str.length === 0) return 0;
 
@@ -45,6 +51,17 @@ export function isSensitiveContext(line: string): boolean {
   return SENSITIVE_VAR_NAMES.some((sensitiveName) => normalizedLine.includes(sensitiveName.toLowerCase()));
 }
 
+/**
+ * Scans string literals for high-entropy values in sensitive contexts.
+ *
+ * Flags strings ≥ 16 chars with entropy above threshold when found near
+ * sensitive variable names (password, secret, api_key, etc.). Exempts
+ * UUIDs, JWTs, hex hashes, base64 images, and version strings.
+ *
+ * @param code - Source code to scan. Returns empty array if empty.
+ * @param filePath - Optional file path for finding location metadata.
+ * @returns Findings with entropy value and severity (high ≥ 4.5, medium ≥ 4.0).
+ */
 export function scanEntropy(code: string, filePath?: string): Finding[] {
   if (code.length === 0) {
     return [];

@@ -236,6 +236,17 @@ function checkPropertySink(line: string, lineNumber: number, taintMap: Map<strin
   }
 }
 
+/**
+ * Performs 3-hop taint analysis tracking data flow from sources to sinks.
+ *
+ * Tracks variable assignments from taint sources (e.g. `req.query`, `document.cookie`)
+ * through up to 3 assignment hops to dangerous sinks (e.g. `eval()`, `innerHTML`).
+ *
+ * @param code - Source code to analyze. Returns empty array if empty.
+ * @param _language - Language identifier (reserved for future per-language parsing).
+ * @param filePath - Optional file path attached to each finding's location.
+ * @returns Findings with source-to-sink taint chains and hop counts.
+ */
 export function scanWithAST(code: string, _language: string, filePath?: string): Finding[] {
   if (code.length === 0) {
     return [];

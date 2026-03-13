@@ -95,6 +95,24 @@ function emptyResult(startTime: number): ScanResult {
   };
 }
 
+/**
+ * Runs the full 5-stage security scan pipeline on source code.
+ *
+ * Stages: regex pattern matching → AST taint analysis → entropy analysis →
+ * behavioral chain analysis → context filtering + suppression.
+ *
+ * @param code - Source code string to scan. Empty string returns zero findings.
+ * @param language - Language override (e.g. `"javascript"`). Auto-detected from `filePath` or code heuristics if omitted.
+ * @param filePath - Optional file path for context filtering (test files get reduced confidence, vendor files get zeroed).
+ * @returns Scan result with deduplicated findings array and severity summary.
+ * @throws Never throws — errors in individual stages are caught and skipped.
+ *
+ * @example
+ * ```ts
+ * const result = await scanCode('eval(userInput)', 'javascript', 'src/app.ts');
+ * console.log(result.summary.critical); // number of critical findings
+ * ```
+ */
 export async function scanCode(
   code: string,
   language?: string,

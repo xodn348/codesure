@@ -1,4 +1,5 @@
 import type { SecurityRule, Finding } from '../types.js';
+import { CodeSureError } from '../errors.js';
 import { safeTruncate } from './sanitize.js';
 
 interface CompiledRule {
@@ -26,8 +27,9 @@ function compileRules(rules: SecurityRule[]): CompiledRule[] {
       if (rule.pattern_not !== undefined) {
         try {
           patternNot = new RegExp(rule.pattern_not, 'gm');
-        } catch (error) {
-          console.warn(`Invalid regex pattern_not for rule ${rule.id}:`, error);
+        } catch (cause) {
+          const err = new CodeSureError('REGEX_COMPILE_FAILED', `Invalid pattern_not for rule ${rule.id}`, { context: { ruleId: rule.id }, cause });
+          console.warn(err.message, cause);
         }
       }
 
@@ -37,14 +39,29 @@ function compileRules(rules: SecurityRule[]): CompiledRule[] {
         patternNot,
         confidence: getConfidence(rule),
       });
-    } catch (error) {
-      console.warn(`Invalid regex pattern for rule ${rule.id}:`, error);
+    } catch (cause) {
+      const err = new CodeSureError('REGEX_COMPILE_FAILED', `Invalid regex pattern for rule ${rule.id}`, { context: { ruleId: rule.id }, cause });
+      console.warn(err.message, cause);
     }
   }
 
   return compiled;
 }
 
+/**
+ * Scans source code line-by-line against compiled YAML security rules.
+ *
+ * @param code - Source code to scan. Returns empty array if empty.
+ * @param rules - Security rules to match against (pre-filtered by language).
+ * @param filePath - Optional file path attached to each finding's location.
+ * @returns Deduplicated findings array, one per rule per line.
+ *
+ * @example
+ * ```ts
+ * const rules = loadRules('src/rules/vulnerability');
+ * const findings = scanWithRegex(code, filterRulesByLanguage(rules, 'javascript'));
+ * ```
+ */
 export function scanWithRegex(code: string, rules: SecurityRule[], filePath?: string): Finding[] {
   if (code.length === 0 || rules.length === 0) {
     return [];
@@ -65,8 +82,9 @@ export function scanWithRegex(code: string, rules: SecurityRule[], filePath?: st
       try {
         compiled.pattern.lastIndex = 0;
         match = compiled.pattern.exec(line);
-      } catch (error) {
-        console.warn(`Regex execution failed for rule ${compiled.rule.id}:`, error);
+      } catch (cause) {
+        const err = new CodeSureError('REGEX_EXEC_FAILED', `Regex execution failed for rule ${compiled.rule.id}`, { context: { ruleId: compiled.rule.id, lineNumber }, cause });
+        console.warn(err.message, cause);
         continue;
       }
 
@@ -80,8 +98,9 @@ export function scanWithRegex(code: string, rules: SecurityRule[], filePath?: st
           if (compiled.patternNot.test(line)) {
             continue;
           }
-        } catch (error) {
-          console.warn(`Regex pattern_not execution failed for rule ${compiled.rule.id}:`, error);
+        } catch (cause) {
+          const err = new CodeSureError('REGEX_EXEC_FAILED', `Regex pattern_not execution failed for rule ${compiled.rule.id}`, { context: { ruleId: compiled.rule.id, lineNumber }, cause });
+          console.warn(err.message, cause);
           continue;
         }
       }

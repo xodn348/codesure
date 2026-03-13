@@ -1,4 +1,5 @@
 import type { Finding, AgentInfo } from '../types.js';
+import { CodeSureError } from '../errors.js';
 
 interface AnonymizedPattern {
   type: string;
@@ -135,8 +136,8 @@ export async function reportPattern(
       message: 'Pattern reported successfully',
       url: issue.html_url,
     };
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    return { success: false, message };
+  } catch (cause) {
+    const err = new CodeSureError('GITHUB_API_FAILED', 'Failed to report pattern to GitHub', { retryable: true, context: { repo: 'xodn348/codesure-rules' }, cause });
+    return { success: false, message: err.message };
   }
 }

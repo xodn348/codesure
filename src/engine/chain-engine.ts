@@ -9,6 +9,16 @@ function appendEvidenceChain(existingChain: string[] | undefined, contributingRu
   return [...merged];
 }
 
+/**
+ * Boosts finding confidence based on co-occurring behavioral taxonomy signals.
+ *
+ * Groups findings by file and applies multipliers when dangerous combinations appear:
+ * - EXS + EXM + EXF chain → 2x confidence on EXF findings (full attack chain)
+ * - DEF + EXM chain → 1.5x confidence on EXM findings (defense evasion + execution)
+ *
+ * @param findings - Pre-analyzed findings from earlier pipeline stages.
+ * @returns Findings with adjusted confidence scores (capped at 100) and merged evidence chains.
+ */
 export function analyzeChain(findings: Finding[]): Finding[] {
   const findingsByFile = new Map<string, Finding[]>();
 

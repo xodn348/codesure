@@ -19,6 +19,13 @@ const GENERATED_CONTENT = [
 
 const DOCS_PATTERNS = [/\/docs\//, /\/examples\//, /\.md$/, /\.txt$/, /\.rst$/];
 
+/**
+ * Classifies a file path into context categories for confidence adjustment.
+ *
+ * @param filePath - File path to classify (e.g. `"src/app.ts"`, `"__tests__/foo.test.ts"`).
+ * @param firstLines - Optional first lines of file content for generated-code detection.
+ * @returns Path context with boolean flags and a confidence multiplier (0 for vendor, 0.3 for test, 1.0 for production).
+ */
 export function getPathContext(filePath: string, firstLines?: string): PathContext {
   const is_test = TEST_PATTERNS.some(p => p.test(filePath));
   const is_vendor = VENDOR_PATTERNS.some(p => p.test(filePath));

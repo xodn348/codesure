@@ -2,6 +2,7 @@ import { readFileSync, readdirSync, statSync } from 'fs';
 import { join } from 'path';
 import yaml from 'js-yaml';
 import type { SecurityRule } from '../types.js';
+import { CodeSureError } from '../errors.js';
 
 const REQUIRED_FIELDS: (keyof SecurityRule)[] = [
   'id',
@@ -135,16 +136,18 @@ export function parseRuleFile(filePath: string): SecurityRule[] {
   let content: string;
   try {
     content = readFileSync(filePath, 'utf-8');
-  } catch (err) {
-    console.warn(`[codesure] Could not read rule file "${filePath}": ${err}`);
+  } catch (cause) {
+    const err = new CodeSureError('RULE_LOAD_FAILED', `Could not read rule file "${filePath}"`, { context: { filePath }, cause });
+    console.warn(`[codesure] ${err.message}`, cause);
     return [];
   }
 
   let parsed: unknown;
   try {
     parsed = yaml.load(content);
-  } catch (err) {
-    console.warn(`[codesure] Could not parse YAML in "${filePath}": ${err}`);
+  } catch (cause) {
+    const err = new CodeSureError('RULE_PARSE_FAILED', `Could not parse YAML in "${filePath}"`, { context: { filePath }, cause });
+    console.warn(`[codesure] ${err.message}`, cause);
     return [];
   }
 

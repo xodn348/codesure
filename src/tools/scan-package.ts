@@ -1,5 +1,6 @@
 // Privacy: this tool only sends the package NAME to registry.npmjs.org, never any user code.
 import type { PackageCheckResult } from '../types.js';
+import { CodeSureError } from '../errors.js';
 
 const NPM_REGISTRY = 'https://registry.npmjs.org';
 const NPM_DOWNLOADS_API = 'https://api.npmjs.org/downloads/point/last-week';
@@ -17,6 +18,16 @@ interface NpmDownloadsData {
   package: string;
 }
 
+/**
+ * Checks an npm package for supply-chain risks and typosquatting.
+ *
+ * Queries the npm registry for package metadata and evaluates risk signals:
+ * staleness (>2 years), lifecycle scripts (postinstall/preinstall), and
+ * new single-maintainer packages (<30 days old).
+ *
+ * @param name - npm package name to check. Only the name is sent to the registry.
+ * @returns Risk assessment with score (0-100), existence flag, and issue descriptions.
+ */
 export async function checkPackage(name: string): Promise<PackageCheckResult> {
   const data = await fetchPackageMetadata(name);
 
@@ -41,7 +52,9 @@ export async function fetchPackageMetadata(name: string): Promise<NpmPackageData
     }
     const json = await response.json() as NpmPackageData;
     return json;
-  } catch {
+  } catch (cause) {
+    const err = new CodeSureError('NETWORK_FAILED', `Failed to fetch npm metadata for "${name}"`, { retryable: true, context: { packageName: name }, cause });
+    console.warn(`[codesure] ${err.message}`);
     return null;
   }
 }
@@ -52,7 +65,9 @@ async function fetchWeeklyDownloads(name: string): Promise<number | null> {
     if (!response.ok) return null;
     const json = await response.json() as NpmDownloadsData;
     return json.downloads ?? null;
-  } catch {
+  } catch (cause) {
+    const err = new CodeSureError('NETWORK_FAILED', `Failed to fetch download stats for "${name}"`, { retryable: true, context: { packageName: name }, cause });
+    console.warn(`[codesure] ${err.message}`);
     return null;
   }
 }

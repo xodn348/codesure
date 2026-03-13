@@ -1,5 +1,6 @@
 import type { ManifestCheckResult, Finding, Severity } from '../types.js';
 import { DANGEROUS_PERMISSIONS } from '../constants.js';
+import { CodeSureError } from '../errors.js';
 
 type ManifestType = 'chrome_extension' | 'vscode_extension' | 'package_json';
 
@@ -212,6 +213,16 @@ function analyzePackageJson(parsed: Record<string, unknown>): ManifestCheckResul
   };
 }
 
+/**
+ * Audits a browser extension or package manifest for dangerous permissions and CSP issues.
+ *
+ * Auto-detects manifest type from content (chrome_extension, vscode_extension, package_json)
+ * unless explicitly provided. Returns permission risk scores and specific findings.
+ *
+ * @param manifestContent - Raw JSON string of the manifest file.
+ * @param type - Override manifest type detection. Auto-detected if omitted.
+ * @returns Check result with permission score, dangerous permissions list, and findings.
+ */
 export function scanManifest(
   manifestContent: string,
   type?: ManifestType,
@@ -233,15 +244,15 @@ export function scanManifest(
       };
     }
     parsed = raw as Record<string, unknown>;
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
+  } catch (cause) {
+    const err = new CodeSureError('MANIFEST_PARSE_FAILED', 'Failed to parse manifest JSON', { context: { manifestLength: manifestContent.length }, cause });
     return {
       permissions_score: 0,
       dangerous_permissions: [],
       findings: [makeFinding(
         'MANIFEST-PARSE-ERR',
         'high',
-        `Failed to parse manifest JSON: ${message}`,
+        `Failed to parse manifest JSON: ${err.message}`,
         'MANIFEST-INVALID-JSON',
       )],
     };
