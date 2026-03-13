@@ -31,7 +31,8 @@ Restart your client. `scan_code`, `scan_package`, and other tools appear automat
 
 **Supported clients**: Claude Code · Codex · Opencode · Claude Desktop · Cursor · VS Code (Copilot)
 
-## How It Works
+<details>
+<summary><strong>How It Works</strong></summary>
 
 CodeSure is a **stdio MCP server**. Your AI client spawns it as a child process and communicates via JSON-RPC over stdin/stdout. No HTTP server, no open ports, no network listeners — the process exists only while your client is running.
 
@@ -45,6 +46,8 @@ CodeSure is a **stdio MCP server**. Your AI client spawns it as a child process 
 | Claude Desktop | `~/Library/.../Claude/claude_desktop_config.json` |
 | Cursor | `~/.cursor/mcp.json` |
 | VS Code | `settings.json` → `github.copilot.mcp.servers` |
+
+</details>
 
 ## Detection Pipeline
 
@@ -132,7 +135,8 @@ Once installed, your AI assistant gains these tools:
 | `report_pattern` | Anonymizes a detected malicious pattern and reports it as a GitHub issue to the community rules repo. Requires explicit user confirmation. |
 | `update_rules` | Downloads the latest community detection rules. |
 
-## Auto-Scan Setup
+<details>
+<summary><strong>Auto-Scan Setup</strong></summary>
 
 `npx codesure install` automatically writes auto-scan rules to your client's rule file. No manual setup needed:
 
@@ -145,10 +149,7 @@ Once installed, your AI assistant gains these tools:
 
 The rule tells your AI assistant to call `scan_code` after writing or modifying code, fix critical findings before returning code, and warn on high findings with fix suggestions.
 
-<details>
-<summary>Manual setup (if you prefer)</summary>
-
-Add this to your client's rule file:
+**Manual setup** — Add this to your client's rule file:
 
 ```
 After writing or modifying code, call scan_code to check for vulnerabilities.
@@ -183,7 +184,8 @@ Benchmarked on 60+ test fixtures (development 70% / holdout 30%):
 | True Positive Rate | > 90% | > 90% |
 | False Positive Rate | < 10% | < 10% |
 
-## Inline Suppression
+<details>
+<summary><strong>Inline Suppression</strong></summary>
 
 Suppress specific rules on a per-line basis:
 
@@ -193,7 +195,10 @@ eval(trusted)  // codesure-ignore: js.security.eval-injection
 
 Suppressed findings stay in the output with `suppressed: true` for audit trail. Broad suppression without a rule ID triggers a warning.
 
-## `.codesureignore`
+</details>
+
+<details>
+<summary><strong>.codesureignore</strong></summary>
 
 Exclude files from scanning. Uses gitignore syntax. Smart defaults apply when no `.codesureignore` exists:
 
@@ -208,13 +213,19 @@ build/
 
 Ignored files are not blocked — their confidence is reduced to 0 so findings remain visible in audit logs.
 
-## Changelog
+</details>
+
+<details>
+<summary><strong>Changelog</strong></summary>
+
+### 1.2.0
+
+- **feat**: Apply ai-native v2 — `CodeSureError` typed error class with 8 error codes, TSDoc on 10 core public APIs, `AGENTS.md` + per-client rules files.
 
 ### 1.1.4
 
 - **fix**: Rule loading was silently broken when running via `npx` or `node dist/`. `RULES_DIR` now resolves correctly from both `src/` and `dist/` contexts.
 - **feat**: `npx codesure install` now writes auto-scan rules to Claude Code, Codex, Opencode, and Cursor rule files automatically.
-- **docs**: Pipeline stage descriptions collapsed into `<details>` blocks for cleaner README.
 
 ### 1.1.3
 
@@ -233,10 +244,15 @@ Ignored files are not blocked — their confidence is reduced to 0 so findings r
 
 - Initial release. 5-stage detection pipeline, 36 YAML rules, 5 MCP tools, 60+ test fixtures, Youden Index 0.854.
 
-## V1 Limitations
+</details>
+
+<details>
+<summary><strong>V1 Limitations</strong></summary>
 
 - Taint analysis is limited to 3-hop AST (single file); cross-file taint is not tracked
 - Tier 3-6 obfuscation (control flow flattening, virtualization) may not be detected
+
+</details>
 
 ## License
 
