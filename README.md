@@ -134,9 +134,21 @@ Once installed, your AI assistant gains these tools:
 
 ## Auto-Scan Setup
 
-MCP tools are not triggered automatically — your AI assistant decides when to call them. To make CodeSure scan every code change automatically, add a rule to your client:
+`npx codesure install` automatically writes auto-scan rules to your client's rule file. No manual setup needed:
 
-**Claude Code** — create `.claude/rules/codesure.md`:
+| Client | Rule file created |
+|--------|------------------|
+| Claude Code | `~/.claude/rules/codesure.md` |
+| Codex | `~/.codex/AGENTS.md` |
+| Opencode | `~/.config/opencode/AGENTS.md` |
+| Cursor | `~/.cursorrules` |
+
+The rule tells your AI assistant to call `scan_code` after writing or modifying code, fix critical findings before returning code, and warn on high findings with fix suggestions.
+
+<details>
+<summary>Manual setup (if you prefer)</summary>
+
+Add this to your client's rule file:
 
 ```
 After writing or modifying code, call scan_code to check for vulnerabilities.
@@ -144,17 +156,7 @@ If critical findings exist, fix them before presenting the code.
 If high findings exist, warn the user with fix suggestions.
 ```
 
-**Codex** — add to `AGENTS.md`:
-
-```
-After generating code, always run the scan_code MCP tool to check for security issues.
-```
-
-**Cursor** — add to `.cursorrules`:
-
-```
-After writing code, use the scan_code tool to verify security. Report any findings.
-```
+</details>
 
 ## What It Detects
 
@@ -180,6 +182,56 @@ Benchmarked on 60+ test fixtures (development 70% / holdout 30%):
 | Youden Index | 0.854 | 0.917 |
 | True Positive Rate | > 90% | > 90% |
 | False Positive Rate | < 10% | < 10% |
+
+## Inline Suppression
+
+Suppress specific rules on a per-line basis:
+
+```javascript
+eval(trusted)  // codesure-ignore: js.security.eval-injection
+```
+
+Suppressed findings stay in the output with `suppressed: true` for audit trail. Broad suppression without a rule ID triggers a warning.
+
+## `.codesureignore`
+
+Exclude files from scanning. Uses gitignore syntax. Smart defaults apply when no `.codesureignore` exists:
+
+```
+node_modules/
+vendor/
+dist/
+build/
+*.min.js
+*.d.ts
+```
+
+Ignored files are not blocked — their confidence is reduced to 0 so findings remain visible in audit logs.
+
+## Changelog
+
+### 1.1.4
+
+- **fix**: Rule loading was silently broken when running via `npx` or `node dist/`. `RULES_DIR` now resolves correctly from both `src/` and `dist/` contexts.
+- **feat**: `npx codesure install` now writes auto-scan rules to Claude Code, Codex, Opencode, and Cursor rule files automatically.
+- **docs**: Pipeline stage descriptions collapsed into `<details>` blocks for cleaner README.
+
+### 1.1.3
+
+- **fix**: Sanitize all JSON output to strip lone surrogate escape sequences that caused MCP clients to fail parsing scan results.
+
+### 1.1.2
+
+- **fix**: Use surrogate-safe truncation in snippet output.
+
+### 1.1.1
+
+- **docs**: Detection pipeline research citations, stdio MCP architecture details, privacy policy.
+- **feat**: Auto-install command (`npx codesure install`) with client detection.
+
+### 1.0.0
+
+- Initial release. 5-stage detection pipeline, 36 YAML rules, 5 MCP tools, 60+ test fixtures, Youden Index 0.854.
 
 ## V1 Limitations
 
