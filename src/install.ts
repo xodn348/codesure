@@ -151,13 +151,13 @@ function setupAutoScanRules(): { created: number; skipped: number; failed: numbe
           continue;
         }
         const merged = `${existing.trimEnd()}\n\n${target.content}\n`;
-        writeFileSync(target.path, merged);
+        writeFileSync(target.path, merged, 'utf8');
         created += 1;
         continue;
       }
 
       ensureParentDirectory(target.path);
-      writeFileSync(target.path, `${target.content}\n`);
+      writeFileSync(target.path, `${target.content}\n`, 'utf8');
       created += 1;
     } catch {
       failed += 1;
@@ -176,8 +176,10 @@ function handleJsonClient(client: JsonClient): 'installed' | 'skipped' | 'missin
 
     if (client.isInstalled(config)) return 'skipped';
 
-    const updated = client.addEntry(config);
-    writeFileSync(client.configPath, JSON.stringify(updated, null, 2) + '\n');
+    const freshRaw = readFileSync(client.configPath, 'utf8');
+    const freshConfig = JSON.parse(freshRaw) as Record<string, unknown>;
+    const updated = client.addEntry(freshConfig);
+    writeFileSync(client.configPath, JSON.stringify(updated, null, 2) + '\n', 'utf8');
     return 'installed';
   } catch {
     return 'error';
