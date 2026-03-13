@@ -218,6 +218,10 @@ Ignored files are not blocked — their confidence is reduced to 0 so findings r
 <details>
 <summary><strong>Changelog</strong></summary>
 
+### 1.2.3
+
+- refactor: ai-native compliance — userMessage field, TSDoc, error context, function splitting
+
 ### 1.2.2
 
 - fix: atomic upsert for shared JSON configs, encoding consistency
