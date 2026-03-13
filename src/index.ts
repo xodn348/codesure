@@ -8,6 +8,7 @@ import { reportPattern } from "./tools/report-pattern.js";
 import { updateRules } from "./tools/update-rules.js";
 import { checkPackage } from "./tools/scan-package.js";
 import type { AgentInfo } from "./types.js";
+import { safeJsonStringify } from "./engine/sanitize.js";
 
 if (process.argv.includes('--version')) {
   const { createRequire } = await import('module');
@@ -46,7 +47,7 @@ server.registerTool(
   async ({ code, language, file_path }) => {
     const result = await scanCode(code, language, file_path);
     return {
-      content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
+      content: [{ type: "text" as const, text: safeJsonStringify(result, 2) }],
     };
   }
 );
@@ -62,7 +63,7 @@ server.registerTool(
   async ({ name }) => {
     const result = await checkPackage(name);
     return {
-      content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
+      content: [{ type: "text" as const, text: safeJsonStringify(result, 2) }],
     };
   }
 );
@@ -79,7 +80,7 @@ server.registerTool(
   async ({ manifest_content, type }) => {
     const result = scanManifest(manifest_content, type);
     return {
-      content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
+      content: [{ type: "text" as const, text: safeJsonStringify(result, 2) }],
     };
   }
 );
