@@ -19,7 +19,8 @@
     "build": "tsc && shx chmod +x dist/index.js",
     "prepare": "npm run build",
     "test": "bun test",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "version": "node scripts/update-readme.js && git add README.md"
   },
   "engines": {
     "node": ">=18"
