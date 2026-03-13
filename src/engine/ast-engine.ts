@@ -1,5 +1,6 @@
 import type { Finding } from '../types.js';
 import { SOURCES, SINKS } from '../data/sources-sinks.js';
+import { safeTruncate } from './sanitize.js';
 
 interface TaintBinding {
   sourceName: string;
@@ -68,7 +69,7 @@ function createFinding(params: {
       line: params.lineNumber,
       column,
     },
-    snippet: params.line.trim().slice(0, 200),
+    snippet: safeTruncate(params.line.trim(), 200),
     evidence_chain: params.evidenceChain,
   };
 }

@@ -1,4 +1,5 @@
 import type { SecurityRule, Finding } from '../types.js';
+import { safeTruncate } from './sanitize.js';
 
 interface CompiledRule {
   rule: SecurityRule;
@@ -103,7 +104,7 @@ export function scanWithRegex(code: string, rules: SecurityRule[], filePath?: st
           line: lineNumber,
           column: match.index,
         },
-        snippet: line.trim().slice(0, 200),
+        snippet: safeTruncate(line.trim(), 200),
         fix_suggestion: compiled.rule.fix,
       });
       seen.add(dedupeKey);
