@@ -218,6 +218,29 @@ Ignored files are not blocked — their confidence is reduced to 0 so findings r
 <details>
 <summary><strong>Changelog</strong></summary>
 
+### 1.2.1
+
+- feat: automate README changelog on npm version
+- docs: remove constitution from AGENTS.md (now in rules files only)
+- docs: collapse secondary sections with details tags
+- feat: apply ai-native v2 — typed errors, TSDoc, AGENTS.md
+- docs: add changelog, inline suppression, and codesureignore sections to README
+- fix: resolve RULES_DIR for dist runtime; add auto-scan rules installer; bump to 1.1.4
+- fix: sanitize all JSON output to strip lone surrogate escape sequences
+- chore: bump version to 1.1.2
+- fix: use surrogate-safe truncation in snippet output to prevent JSON parse errors
+- chore: bump version to 1.1.1
+- docs: add detection pipeline research citations, stdio MCP details, privacy policy
+- docs: update README with auto-install command and client table
+- feat(install): add auto-install command for Claude Code, Codex, Opencode, Cursor
+- chore: ignore package-lock.json (bun project)
+- docs: add README, PRIVACY policy, RULES guide, and BENCHMARK report
+- test(benchmark): add Youden Index benchmark suite
+- test(fixtures): add security test fixtures (60+ cases)
+- feat(server): add MCP server entry point with auto-scan prompt
+- feat(tools): add community reporting and rule update tools
+- feat(tools): add integrated scan_code pipeline
+
 ### 1.2.0
 
 - **feat**: Apply ai-native v2 — `CodeSureError` typed error class with 8 error codes, TSDoc on 10 core public APIs, `AGENTS.md` + per-client rules files.
