@@ -1,6 +1,6 @@
 import { homedir } from 'os';
 import { join } from 'path';
-import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
 import { execSync } from 'child_process';
 
 type JsonClient = {
@@ -20,6 +20,12 @@ type CliClient = {
 };
 
 type ClientDef = JsonClient | CliClient;
+
+type RuleTarget = {
+  name: string;
+  path: string;
+  content: string;
+};
 
 const HOME = homedir();
 
@@ -93,6 +99,74 @@ const clients: ClientDef[] = [
   },
 ];
 
+const RULE_CONTENT = [
+  'After writing or modifying code, always call the scan_code MCP tool.',
+  'If critical findings exist, fix them before returning code to the user.',
+  'If high findings exist, return code with a short warning and fix suggestions.',
+].join('\n');
+
+const ruleTargets: RuleTarget[] = [
+  {
+    name: 'Claude Code rule',
+    path: join(HOME, '.claude/rules/codesure.md'),
+    content: RULE_CONTENT,
+  },
+  {
+    name: 'Codex AGENTS',
+    path: join(HOME, '.codex/AGENTS.md'),
+    content: RULE_CONTENT,
+  },
+  {
+    name: 'Opencode AGENTS',
+    path: join(HOME, '.config/opencode/AGENTS.md'),
+    content: RULE_CONTENT,
+  },
+  {
+    name: 'Cursor rules',
+    path: join(HOME, '.cursorrules'),
+    content: RULE_CONTENT,
+  },
+];
+
+function ensureParentDirectory(path: string): void {
+  const lastSlash = path.lastIndexOf('/');
+  if (lastSlash <= 0) {
+    return;
+  }
+  const parent = path.slice(0, lastSlash);
+  mkdirSync(parent, { recursive: true });
+}
+
+function setupAutoScanRules(): { created: number; skipped: number; failed: number } {
+  let created = 0;
+  let skipped = 0;
+  let failed = 0;
+
+  for (const target of ruleTargets) {
+    try {
+      if (existsSync(target.path)) {
+        const existing = readFileSync(target.path, 'utf8');
+        if (existing.includes('scan_code MCP tool')) {
+          skipped += 1;
+          continue;
+        }
+        const merged = `${existing.trimEnd()}\n\n${target.content}\n`;
+        writeFileSync(target.path, merged);
+        created += 1;
+        continue;
+      }
+
+      ensureParentDirectory(target.path);
+      writeFileSync(target.path, `${target.content}\n`);
+      created += 1;
+    } catch {
+      failed += 1;
+    }
+  }
+
+  return { created, skipped, failed };
+}
+
 function handleJsonClient(client: JsonClient): 'installed' | 'skipped' | 'missing' | 'error' {
   if (!existsSync(client.configPath)) return 'missing';
 
@@ -153,6 +227,8 @@ export async function install(): Promise<void> {
     }
   }
 
+  const ruleSetup = setupAutoScanRules();
+
   if (detected === 0) {
     console.log('  ℹ️  No MCP clients detected on this machine.\n');
     console.log('  Manual setup (add to your client config):\n');
@@ -162,5 +238,12 @@ export async function install(): Promise<void> {
     console.log('  Claude Desktop → add to ~/Library/Application Support/Claude/claude_desktop_config.json\n');
   } else {
     console.log(`\n✨ Done! Restart your MCP client to activate CodeSure.\n`);
+  }
+
+  console.log('Auto-scan rule setup:');
+  console.log(`  ✅ created/updated: ${ruleSetup.created}`);
+  console.log(`  ⏭  already present: ${ruleSetup.skipped}`);
+  if (ruleSetup.failed > 0) {
+    console.log(`  ⚠️  failed: ${ruleSetup.failed}`);
   }
 }

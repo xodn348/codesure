@@ -12,7 +12,11 @@ import { loadCodesureignore, isIgnored, isIgnoredByDefault } from '../engine/cod
 import type { ScanResult, Finding, ScanSummary } from '../types.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const RULES_DIR = join(__dirname, '..', 'rules');
+// Rules live in src/rules/ (included in npm package via "files").
+// Works from both src/tools/ (bun test) and dist/tools/ (node / npx):
+//   src/tools/../../src/rules  → src/rules  ✓
+//   dist/tools/../../src/rules → src/rules  ✓
+const RULES_DIR = join(__dirname, '..', '..', 'src', 'rules');
 
 function getLanguageFromExtension(filePath?: string): string | undefined {
   if (filePath === undefined || filePath.trim() === '') {

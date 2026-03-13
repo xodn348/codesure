@@ -60,13 +60,17 @@ Code input
   └─ Stage 5: Context Filter            Path-based FP reduction
 ```
 
-### Stage 1 — Regex Pattern Matching
+<details>
+<summary><strong>Stage 1 — Regex Pattern Matching</strong></summary>
 
 Matches each line against 36 rules (16 vulnerability + 20 malicious). Each rule is a YAML file with `pattern` (positive match) and `pattern_not` (negative exclusion). Catches known patterns like `eval()`, `innerHTML`, SQL concatenation, `child_process.exec`, reverse shells, crypto miners.
 
 > **Research basis**: Pattern-based detection remains the foundation of production SAST tools. Semgrep, CodeQL, and ESLint security plugins all use rule-based pattern matching as their primary detection layer.
 
-### Stage 2 — AST Taint Analysis
+</details>
+
+<details>
+<summary><strong>Stage 2 — AST Taint Analysis</strong></summary>
 
 Tracks data flow from **sources** (`req.query`, `document.cookie`, `process.env`) to **sinks** (`eval()`, `db.query()`, `innerHTML`) through variable assignments, up to 3 hops. Distinguishes `eval("hello")` (safe constant) from `eval(userInput)` (tainted external input).
 
@@ -76,7 +80,10 @@ Tracks data flow from **sources** (`req.query`, `document.cookie`, `process.env`
 > - Ghebremichael, J. et al. (2025). *SemTaint: Multi-Agent Taint Specification Extraction for Vulnerability Detection*. [arXiv:2601.10865](https://arxiv.org/abs/2601.10865)
 > - Dutta, S. et al. (2021). *InspectJS: Leveraging Code Similarity and User-Feedback for Effective Taint Specification Inference for JavaScript*. [arXiv:2111.09625](https://arxiv.org/abs/2111.09625)
 
-### Stage 3 — Entropy Analysis
+</details>
+
+<details>
+<summary><strong>Stage 3 — Entropy Analysis</strong></summary>
 
 Computes Shannon entropy of string literals. High-entropy strings (≥ 4.5 bits/byte) in sensitive contexts (`password`, `secret`, `api_key`) are flagged as potential hardcoded secrets or obfuscated payloads. UUIDs, JWTs, hex hashes, base64 images, and version strings are exempted.
 
@@ -86,7 +93,10 @@ Computes Shannon entropy of string literals. High-entropy strings (≥ 4.5 bits/
 > - Sujon, K.M. et al. (2025). *A novel framework for malware detection using entropy-based statistical features*. Engineering Research Express, 7(2). [DOI: 10.1088/2631-8695/add645](https://doi.org/10.1088/2631-8695/add645)
 > - Veracode. (2021). *Using Entropy to Identify Obfuscated Malicious Code*. [veracode.com](https://www.veracode.com/blog/detecting-obfuscated-malicious-code/)
 
-### Stage 4 — Behavioral Chain Analysis
+</details>
+
+<details>
+<summary><strong>Stage 4 — Behavioral Chain Analysis</strong></summary>
 
 Groups findings by file using a 7-category taxonomy (EXS/EXM/EXF/NET/SYS/DEF/MET). When multiple categories co-occur in one file — e.g., code execution source (EXS) + execution method (EXM) + data exfiltration (EXF) — confidence is boosted (up to 2x). Individual signals may be benign; combined signals strongly indicate malicious intent.
 
@@ -96,7 +106,10 @@ Groups findings by file using a 7-category taxonomy (EXS/EXM/EXF/NET/SYS/DEF/MET
 > - Huang, C. et al. (2024). *DONAPI: Malicious NPM Packages Detector using Behavior Sequence Knowledge Mapping*. USENIX Security. [usenix.org](https://www.usenix.org/conference/usenixsecurity24/presentation/huang-cheng)
 > - Gokkaya, B. et al. (2026). *Software supply chain: A taxonomy of attacks, mitigations and risk assessment strategies*. J. Information Security and Applications, 97. [DOI: 10.1016/j.jisa.2025.104324](https://doi.org/10.1016/j.jisa.2025.104324)
 
-### Stage 5 — Context Filter
+</details>
+
+<details>
+<summary><strong>Stage 5 — Context Filter</strong></summary>
 
 Adjusts confidence based on file path. Test files (`*.test.ts`, `__tests__/`) get reduced confidence (×0.3). Vendor/generated code (`node_modules/`, `.min.js`) gets zeroed out. Production code stays at full confidence. Prevents false positives from test fixtures and third-party code.
 
@@ -104,6 +117,8 @@ Adjusts confidence based on file path. Test files (`*.test.ts`, `__tests__/`) ge
 >
 > - Du, X. et al. (2026). *Reducing False Positives in Static Bug Detection with LLMs: An Empirical Study in Industry*. [arXiv:2601.18844](https://arxiv.org/abs/2601.18844)
 > - Lin, S. (2025). *LLM-Driven Adaptive Source-Sink Identification and False Positive Mitigation for Static Analysis*. [arXiv:2511.04023](https://arxiv.org/abs/2511.04023)
+
+</details>
 
 ## MCP Tools
 
@@ -116,6 +131,30 @@ Once installed, your AI assistant gains these tools:
 | `scan_manifest` | Audits browser extension and app manifests for dangerous permissions. |
 | `report_pattern` | Anonymizes a detected malicious pattern and reports it as a GitHub issue to the community rules repo. Requires explicit user confirmation. |
 | `update_rules` | Downloads the latest community detection rules. |
+
+## Auto-Scan Setup
+
+MCP tools are not triggered automatically — your AI assistant decides when to call them. To make CodeSure scan every code change automatically, add a rule to your client:
+
+**Claude Code** — create `.claude/rules/codesure.md`:
+
+```
+After writing or modifying code, call scan_code to check for vulnerabilities.
+If critical findings exist, fix them before presenting the code.
+If high findings exist, warn the user with fix suggestions.
+```
+
+**Codex** — add to `AGENTS.md`:
+
+```
+After generating code, always run the scan_code MCP tool to check for security issues.
+```
+
+**Cursor** — add to `.cursorrules`:
+
+```
+After writing code, use the scan_code tool to verify security. Report any findings.
+```
 
 ## What It Detects
 
