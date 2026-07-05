@@ -9,12 +9,16 @@ import { updateRules } from "./tools/update-rules.js";
 import { checkPackage } from "./tools/scan-package.js";
 import type { AgentInfo } from "./types.js";
 import { safeJsonStringify } from "./engine/sanitize.js";
+import { rememberFindings, getFinding } from "./engine/finding-store.js";
+import { createRequire } from "module";
+
+// Single source of truth for the server version: read from package.json at
+// runtime. The relative path resolves from both src/ (bun) and dist/ (node).
+const require = createRequire(import.meta.url);
+const SERVER_VERSION = (require("../package.json") as { version: string }).version;
 
 if (process.argv.includes('--version')) {
-  const { createRequire } = await import('module');
-  const require = createRequire(import.meta.url);
-  const pkg = require('../package.json');
-  process.stdout.write(pkg.version + '\n');
+  process.stdout.write(SERVER_VERSION + '\n');
   process.exit(0);
 }
 
@@ -31,7 +35,7 @@ const agentInfo: AgentInfo = {
 
 const server = new McpServer({
   name: "codesure",
-  version: "1.0.0",
+  version: SERVER_VERSION,
 });
 
 server.registerTool(
@@ -46,6 +50,7 @@ server.registerTool(
   },
   async ({ code, language, file_path }) => {
     const result = await scanCode(code, language, file_path);
+    rememberFindings(result.findings);
     return {
       content: [{ type: "text" as const, text: safeJsonStringify(result, 2) }],
     };
@@ -100,16 +105,13 @@ server.registerTool(
         content: [{ type: "text" as const, text: "Confirmation required. Set confirm: true to report this pattern." }],
       };
     }
-    const stubFinding = {
-      id: finding_id,
-      severity: "medium" as const,
-      category: "vulnerability" as const,
-      confidence: 0,
-      rule_id: finding_id,
-      message: "Stub finding for pattern reporting",
-      location: {},
-    };
-    const result = await reportPattern(stubFinding, agentInfo);
+    const finding = getFinding(finding_id);
+    if (!finding) {
+      return {
+        content: [{ type: "text" as const, text: `Unknown finding id "${finding_id}". Run scan_code first, then report a finding from its results.` }],
+      };
+    }
+    const result = await reportPattern(finding, agentInfo);
     return {
       content: [{ type: "text" as const, text: result.message + (result.url ? `\nIssue: ${result.url}` : "") }],
     };
