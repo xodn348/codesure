@@ -1,5 +1,11 @@
+import { createRequire } from 'module';
 import type { Finding, AgentInfo } from '../types.js';
 import { CodeSureError } from '../errors.js';
+
+// Read the package version at runtime so the User-Agent never drifts from
+// package.json. Path resolves from both src/tools/ (bun) and dist/tools/ (node).
+const require = createRequire(import.meta.url);
+const PKG_VERSION = (require('../../package.json') as { version: string }).version;
 
 interface AnonymizedPattern {
   type: string;
@@ -116,7 +122,7 @@ export async function reportPattern(
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
-          'User-Agent': 'codesure-mcp/1.0.0',
+          'User-Agent': `codesure-mcp/${PKG_VERSION}`,
         },
         body: JSON.stringify(issueBody),
       }

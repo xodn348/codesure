@@ -1,4 +1,4 @@
-import { describe, test, expect } from 'bun:test';
+import { describe, test, expect, afterEach } from 'bun:test';
 import { updateRules } from './update-rules.js';
 
 describe('updateRules', () => {
@@ -25,5 +25,55 @@ describe('updateRules', () => {
     );
     expect(typeof result.updated).toBe('number');
     expect(result.message).toBeDefined();
+  });
+});
+
+describe('updateRules source URL validation', () => {
+  const originalFetch = globalThis.fetch;
+
+  afterEach(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  test('rejects an http:// source without fetching', async () => {
+    const fetched: string[] = [];
+    globalThis.fetch = (async (input: unknown) => {
+      fetched.push(String(input));
+      return new Response('{}', { status: 200 });
+    }) as typeof fetch;
+
+    const result = await updateRules('http://raw.githubusercontent.com/foo/rules-index.json');
+
+    expect(fetched).toHaveLength(0);
+    expect(result.updated).toBe(0);
+    expect(result.message).toMatch(/https/i);
+  });
+
+  test('rejects a non-allowlisted https host without fetching', async () => {
+    const fetched: string[] = [];
+    globalThis.fetch = (async (input: unknown) => {
+      fetched.push(String(input));
+      return new Response('{}', { status: 200 });
+    }) as typeof fetch;
+
+    const result = await updateRules('https://evil.example.com/rules-index.json');
+
+    expect(fetched).toHaveLength(0);
+    expect(result.updated).toBe(0);
+    expect(result.message).toMatch(/allowlist/i);
+  });
+
+  test('accepts raw.githubusercontent.com and proceeds to fetch', async () => {
+    const fetched: string[] = [];
+    globalThis.fetch = (async (input: unknown) => {
+      fetched.push(String(input));
+      return new Response(JSON.stringify({ rules: [] }), { status: 200 });
+    }) as typeof fetch;
+
+    const source = 'https://raw.githubusercontent.com/xodn348/codesure-rules/main/rules-index.json';
+    const result = await updateRules(source);
+
+    expect(fetched).toEqual([source]);
+    expect(result.message).toContain('Successfully updated');
   });
 });

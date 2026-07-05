@@ -38,4 +38,22 @@ describe('AST taint tracking', () => {
     const findings = scanWithAST(code, 'javascript');
     expect(findings.length).toBeGreaterThan(0);
   });
+
+  test('inline sanitizer clears taint (no false positive)', () => {
+    const code = `const c = escapeHtml(req.query.x);\nel.innerHTML = c;`;
+    const findings = scanWithAST(code, 'javascript');
+    expect(findings.filter((finding) => finding.rule_id === 'ast.taint.source-to-sink').length).toBe(0);
+  });
+
+  test('sanitizer on a tracked tainted var clears taint', () => {
+    const code = `const x = req.query.x;\nconst c = escapeHtml(x);\nel.innerHTML = c;`;
+    const findings = scanWithAST(code, 'javascript');
+    expect(findings.filter((finding) => finding.rule_id === 'ast.taint.source-to-sink').length).toBe(0);
+  });
+
+  test('unsanitized flow still reported (no regression)', () => {
+    const code = `const c = req.query.x;\nel.innerHTML = c;`;
+    const findings = scanWithAST(code, 'javascript');
+    expect(findings.filter((finding) => finding.rule_id === 'ast.taint.source-to-sink').length).toBeGreaterThan(0);
+  });
 });

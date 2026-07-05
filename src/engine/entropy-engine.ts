@@ -23,7 +23,7 @@ const STRING_LITERAL_REGEX = /["'`][^"'`\n]{16,}["'`]/g;
  * Computes Shannon entropy of a string in bits per byte.
  *
  * @param str - Input string. Returns 0 for empty string.
- * @returns Entropy value in bits/byte. Typical thresholds: suspicious ≥ 4.0, high ≥ 4.5.
+ * @returns Entropy value in bits/byte. Typical thresholds: suspicious ≥ 4.5, high ≥ 5.5.
  */
 export function calculateEntropy(str: string): number {
   if (str.length === 0) return 0;
@@ -60,7 +60,7 @@ export function isSensitiveContext(line: string): boolean {
  *
  * @param code - Source code to scan. Returns empty array if empty.
  * @param filePath - Optional file path for finding location metadata.
- * @returns Findings with entropy value and severity (high ≥ 4.5, medium ≥ 4.0).
+ * @returns Findings with entropy value and severity (high ≥ 5.5, medium ≥ 4.5).
  */
 export function scanEntropy(code: string, filePath?: string): Finding[] {
   if (code.length === 0) {

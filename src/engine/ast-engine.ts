@@ -1,5 +1,5 @@
 import type { Finding } from '../types.js';
-import { SOURCES, SINKS } from '../data/sources-sinks.js';
+import { SOURCES, SINKS, SANITIZERS } from '../data/sources-sinks.js';
 import { safeTruncate } from './sanitize.js';
 
 interface TaintBinding {
@@ -74,7 +74,33 @@ function createFinding(params: {
   };
 }
 
+/**
+ * Detects whether an RHS expression is neutralized by a known sanitizer call.
+ *
+ * Matches any `SANITIZERS` entry used as a call callee (e.g. `escapeHtml(x)`,
+ * `DOMPurify.sanitize(x)`). The leading lookbehind prevents partial matches
+ * such as `escape` firing inside `escapeHtml`.
+ *
+ * @param expression - Assignment right-hand side, trimmed or raw.
+ * @returns True when a sanitizer call appears in the expression.
+ */
+function isSanitizedExpression(expression: string): boolean {
+  for (const sanitizer of SANITIZERS) {
+    const pattern = new RegExp(`(?<![\\w$])${escapeRegex(sanitizer)}\\s*\\(`);
+    if (pattern.test(expression)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 function tryTrackAssignment(target: string, expression: string, taintMap: Map<string, TaintBinding>): void {
+  if (isSanitizedExpression(expression)) {
+    taintMap.delete(target);
+    return;
+  }
+
   const sourceName = findMatchingSource(expression);
   if (sourceName !== undefined) {
     taintMap.set(target, {

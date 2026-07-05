@@ -64,6 +64,6 @@ const query = "SELECT * FROM users WHERE id = " + id;
 ```
 
 Format: `// codesure: [CATEGORY] [TAXONOMY/CWE] [SEVERITY]`
-- `CATEGORY`: `VULN` (vulnerability) or `MAL` (malicious)
+- `CATEGORY`: `VULN` (vulnerability) or `MALICIOUS` (malicious)
 - `TAXONOMY`: e.g., `CWE-89`, `NET`, `EXFIL`
 - `SEVERITY`: `INFO`, `LOW`, `MEDIUM`, `HIGH`, `CRITICAL`
